@@ -126,6 +126,7 @@
             font-size: 14px;
             color: #93c5fd;
             margin-bottom: 5px;
+            word-break: break-all;
         }
         
         .alias-note {
@@ -168,104 +169,4 @@
         </div>
     </div>
 
-    <script>
-        let currentContextIndex = null;
-        
-        // Switch between screens
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-        
-        // Load and display contexts
-        function loadContexts() {
-            const contextsArea = document.getElementById('contextsArea');
-            const emptyMessage = document.getElementById('emptyMessage');
-            const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
-            
-            if (savedContexts.length === 0) {
-                emptyMessage.style.display = 'block';
-                contextsArea.innerHTML = '';
-            } else {
-                emptyMessage.style.display = 'none';
-                contextsArea.innerHTML = '';
-                savedContexts.forEach((context, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'context-card';
-                    card.innerHTML = `
-                        <span class="context-name">${context.name}</span>
-                        <button class="delete-btn" onclick="event.stopPropagation(); deleteContext(${index})">Delete</button>
-                    `;
-                    card.onclick = () => openContext(index);
-                    contextsArea.appendChild(card);
-                });
-            }
-        }
-        
-        // Open context detail screen
-        function openContext(index) {
-            currentContextIndex = index;
-            const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
-            const context = savedContexts[index];
-            
-            document.getElementById('detailTitle').textContent = context.name;
-            
-            const aliasesList = document.getElementById('aliasesList');
-            if (!context.aliases || context.aliases.length === 0) {
-                aliasesList.innerHTML = `
-                    <div style="text-align: center; color: #94a3b8; padding: 40px 20px;">
-                        <p>No aliases yet. Add one to get started!</p>
-                    </div>
-                `;
-            } else {
-                aliasesList.innerHTML = '';
-                context.aliases.forEach((alias, aliasIndex) => {
-                    const aliasCard = document.createElement('div');
-                    aliasCard.className = 'alias-card';
-                    aliasCard.innerHTML = `
-                        <div class="alias-email">${alias.email}</div>
-                        <div class="alias-note">${alias.note || 'No note'}</div>
-                    `;
-                    aliasesList.appendChild(aliasCard);
-                });
-            }
-            
-            showScreen('detailScreen');
-        }
-        
-        // Create a new context
-        document.getElementById('newContextBtn').addEventListener('click', function() {
-            const contextName = prompt('What do you want to call this context? (e.g., Shopping, Gaming, School)');
-            
-            if (contextName && contextName.trim() !== '') {
-                const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
-                savedContexts.push({
-                    name: contextName.trim(),
-                    aliases: [],
-                    createdAt: new Date().toISOString()
-                });
-                localStorage.setItem('contexts', JSON.stringify(savedContexts));
-                loadContexts();
-            }
-        });
-        
-        // Delete a context
-        function deleteContext(index) {
-            if (confirm('Are you sure you want to delete this context?')) {
-                const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
-                savedContexts.splice(index, 1);
-                localStorage.setItem('contexts', JSON.stringify(savedContexts));
-                loadContexts();
-            }
-        }
-        
-        // Add alias (placeholder for now)
-        document.getElementById('addAliasBtn').addEventListener('click', function() {
-            alert('Coming soon! We\'ll add the alias generator next.');
-        });
-        
-        // Load contexts when page first opens
-        loadContexts();
-    </script>
-</body>
-</html>
+    
