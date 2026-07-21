@@ -52,6 +52,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
         }
         
         .context-name {
@@ -84,23 +85,99 @@
         .btn:active {
             background-color: #2563eb;
         }
+        
+        .back-btn {
+            background-color: #64748b;
+            margin-bottom: 20px;
+            width: auto;
+            padding: 8px 16px;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .aliases-list {
+            margin-bottom: 20px;
+            min-height: 150px;
+        }
+        
+        .alias-card {
+            background-color: #1e293b;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .alias-email {
+            font-family: monospace;
+            font-size: 14px;
+            color: #93c5fd;
+            margin-bottom: 5px;
+        }
+        
+        .alias-note {
+            font-size: 12px;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Privacy Vault</h1>
-        
-        <div class="contexts-area" id="contextsArea">
-            <div class="empty-message" id="emptyMessage">
-                <p>No contexts yet. Create one to get started!</p>
+        <!-- DASHBOARD SCREEN -->
+        <div id="dashboardScreen" class="screen active">
+            <h1>🔐 Privacy Vault</h1>
+            
+            <div class="contexts-area" id="contextsArea">
+                <div class="empty-message" id="emptyMessage">
+                    <p>No contexts yet. Create one to get started!</p>
+                </div>
             </div>
+            
+            <button class="btn" id="newContextBtn">+ New Context</button>
         </div>
         
-        <button class="btn" id="newContextBtn">+ New Context</button>
+        <!-- DETAIL SCREEN -->
+        <div id="detailScreen" class="screen">
+            <button class="btn back-btn" onclick="showScreen('dashboardScreen')">← Back</button>
+            
+            <div class="detail-header">
+                <h1 id="detailTitle"></h1>
+            </div>
+            
+            <h2 style="font-size: 18px; margin-bottom: 15px;">Alias Emails</h2>
+            <div class="aliases-list" id="aliasesList">
+                <div style="text-align: center; color: #94a3b8; padding: 40px 20px;">
+                    <p>No aliases yet. Add one to get started!</p>
+                </div>
+            </div>
+            
+            <button class="btn" id="addAliasBtn">+ Add Alias Email</button>
+        </div>
     </div>
 
     <script>
-        // Load contexts from localStorage when page opens
+        let currentContextIndex = null;
+        
+        // Switch between screens
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        // Load and display contexts
         function loadContexts() {
             const contextsArea = document.getElementById('contextsArea');
             const emptyMessage = document.getElementById('emptyMessage');
@@ -108,6 +185,7 @@
             
             if (savedContexts.length === 0) {
                 emptyMessage.style.display = 'block';
+                contextsArea.innerHTML = '';
             } else {
                 emptyMessage.style.display = 'none';
                 contextsArea.innerHTML = '';
@@ -116,11 +194,43 @@
                     card.className = 'context-card';
                     card.innerHTML = `
                         <span class="context-name">${context.name}</span>
-                        <button class="delete-btn" onclick="deleteContext(${index})">Delete</button>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteContext(${index})">Delete</button>
                     `;
+                    card.onclick = () => openContext(index);
                     contextsArea.appendChild(card);
                 });
             }
+        }
+        
+        // Open context detail screen
+        function openContext(index) {
+            currentContextIndex = index;
+            const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
+            const context = savedContexts[index];
+            
+            document.getElementById('detailTitle').textContent = context.name;
+            
+            const aliasesList = document.getElementById('aliasesList');
+            if (!context.aliases || context.aliases.length === 0) {
+                aliasesList.innerHTML = `
+                    <div style="text-align: center; color: #94a3b8; padding: 40px 20px;">
+                        <p>No aliases yet. Add one to get started!</p>
+                    </div>
+                `;
+            } else {
+                aliasesList.innerHTML = '';
+                context.aliases.forEach((alias, aliasIndex) => {
+                    const aliasCard = document.createElement('div');
+                    aliasCard.className = 'alias-card';
+                    aliasCard.innerHTML = `
+                        <div class="alias-email">${alias.email}</div>
+                        <div class="alias-note">${alias.note || 'No note'}</div>
+                    `;
+                    aliasesList.appendChild(aliasCard);
+                });
+            }
+            
+            showScreen('detailScreen');
         }
         
         // Create a new context
@@ -141,11 +251,18 @@
         
         // Delete a context
         function deleteContext(index) {
-            const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
-            savedContexts.splice(index, 1);
-            localStorage.setItem('contexts', JSON.stringify(savedContexts));
-            loadContexts();
+            if (confirm('Are you sure you want to delete this context?')) {
+                const savedContexts = JSON.parse(localStorage.getItem('contexts')) || [];
+                savedContexts.splice(index, 1);
+                localStorage.setItem('contexts', JSON.stringify(savedContexts));
+                loadContexts();
+            }
         }
+        
+        // Add alias (placeholder for now)
+        document.getElementById('addAliasBtn').addEventListener('click', function() {
+            alert('Coming soon! We\'ll add the alias generator next.');
+        });
         
         // Load contexts when page first opens
         loadContexts();
